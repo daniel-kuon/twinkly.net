@@ -1,0 +1,194 @@
+﻿openapi: 3.0.3
+info:
+  title: Your API Name
+  version: 1.0.0
+
+servers:
+  - url: http://192.168.178.51
+    description: Local server
+
+
+paths:
+  /xled/v1/login:
+    post:
+      summary: Request access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                challenge:
+                  type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authentication_token:
+                    type: string
+                  authentication_token_expires_in:
+                    type: integer
+                  challenge-response:
+                    type: string
+                  code:
+                    type: integer
+  /xled/v1/verify:
+    post:
+      summary: Verify the token retrieved by Login.
+      parameters:
+        - in: header
+          name: X-Auth-Token
+          schema:
+            type: string
+          required: true
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                challenge-response:
+                  type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+  /xled/v1/logout:
+    post:
+      summary: Invalidate access token.
+      parameters:
+        - in: header
+          name: X-Auth-Token
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+  /xled/v1/gestalt:
+    get:
+      summary: Get detailed information about the device
+      security:
+        - authToken: []
+      responses:
+        200:
+          description: Detailed information about the device.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product_name:
+                    type: string
+                  product_version:
+                    type: string
+                  hardware_version:
+                    type: string
+                  bytes_per_led:
+                    type: integer
+                  flash_size:
+                    type: integer
+                  led_type:
+                    type: integer
+                  led_version:
+                    type: string
+                  product_code:
+                    type: string
+                  device_name:
+                    type: string
+                  rssi:
+                    type: integer
+                  uptime:
+                    type: string
+                  hw_id:
+                    type: string
+                  mac:
+                    type: string
+                  uuid:
+                    type: string
+                  max_supported_led:
+                    type: integer
+                  base_leds_number:
+                    type: integer
+                  number_of_led:
+                    type: integer
+                  led_profile:
+                    type: string
+                  frame_rate:
+                    type: integer
+                  movie_capacity:
+                    type: integer
+                  copyright:
+                    type: string
+                  code:
+                    type: integer
+  /xled/v1/led/color:
+    post:
+      summary: Set LED color
+      security:
+        - authToken: []
+      parameters:
+        - in: header
+          name: X-Auth-Token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    hue:
+                      type: integer
+                    saturation:
+                      type: integer
+                    value:
+                      type: integer
+                - type: object
+                  properties:
+                    red:
+                      type: integer
+                    green:
+                      type: integer
+                    blue:
+                      type: integer
+            examples:
+              HSV Color:
+                value: {"hue": 300, "saturation": 255, "value": 255}
+      responses:
+        '200':
+          description: The response will be an object with code
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+              example:
+                code: 1000
+securitySchemes:
+  authToken:
+    type: header
+    name: X-Auth-Token

@@ -1,0 +1,444 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Scanner"
+        xmlns:flashCap="clr-namespace:FlashCap;assembly=FlashCap.Core"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        Width="2000" Height="1000"
+        x:Class="Scanner.MainWindow"
+        x:DataType="local:MainWindowViewModel"
+        WindowStartupLocation="CenterOwner"
+        Title="Scanner">
+    <Window.Resources>
+        <local:VideoCharacteristicsToStringConverter x:Key="VideoCharacteristicsToStringConverter" />
+        <local:EnumValuesToItemSourceConverter x:Key="EnumValuesToItemSourceConverter" />
+        <local:InvertBooleanConverter x:Key="InvertBooleanConverter" />
+        <local:MainWindowTabItemEnumConverter x:Key="MainWindowTabItemEnumConverter" />
+    </Window.Resources>
+    <TabControl
+        SelectedValueBinding="{Binding  SelectedTab, Converter={StaticResource MainWindowTabItemEnumConverter}}">
+        <TabItem Header="Webcam live configuration">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Image Grid.Row="2" Grid.Column="0" Stretch="Uniform" Source="{Binding RedChannel}" />
+                <Label Grid.Row="2" Grid.Column="0" Background="Red" Foreground="White" HorizontalAlignment="Left"
+                       VerticalAlignment="Top">
+                    Red Channel
+                </Label>
+                <Label Grid.Row="2" Grid.Column="1" Background="Green" Foreground="White" HorizontalAlignment="Left"
+                       VerticalAlignment="Top">
+                    Green Channel
+                </Label>
+                <Image Grid.Row="2" Grid.Column="1" Source="{Binding GreenChannel}" />
+                <Label Grid.Row="3" Grid.Column="0" Background="Blue" Foreground="White" HorizontalAlignment="Left"
+                       VerticalAlignment="Top">
+                    Blue Channel
+                </Label>
+                <Image Grid.Row="3" Grid.Column="0" Source="{Binding BlueChannel}" />
+                <Label Grid.Row="3" Grid.Column="1" Background="Black" Foreground="White" HorizontalAlignment="Left"
+                       VerticalAlignment="Top">
+                    Mixed Channels
+                </Label>
+                <Image Grid.Row="3" Grid.Column="1" Source="{Binding LastRawFrame}" />
+
+
+                <TabControl Grid.Row="2" Grid.Column="2" Grid.RowSpan="2">
+                    <TabItem Header="Settings">
+                        <ScrollViewer HorizontalAlignment="Stretch" x:Name="SettingsList">
+                            <StackPanel Orientation="Vertical" Margin="5" HorizontalAlignment="Stretch">
+                                <Border Classes="SettingsBox">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="100" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Camera" Grid.Column="0" VerticalAlignment="Center"
+                                                   Padding="0,0,10,0" />
+                                        <ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
+                                                  ItemsSource="{Binding CameraList}"
+                                                  SelectedItem="{Binding SelectedCamera}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate DataType="flashCap:CaptureDeviceDescriptor">
+                                                    <ComboBoxItem Content="{Binding Name }" />
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Resolution"
+                                                   VerticalAlignment="Center" Margin="0,0,5,0" />
+                                        <ComboBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                                  ItemsSource="{Binding CharacteristicList}"
+                                                  SelectedItem="{Binding SelectedCharacteristic}">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate DataType="flashCap:VideoCharacteristics">
+                                                    <ComboBoxItem
+                                                        Content="{Binding Converter={StaticResource VideoCharacteristicsToStringConverter}}" />
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Scale Down Factor"
+                                                   VerticalAlignment="Center" Margin="0,0,5,0" />
+                                        <Slider Grid.Row="2" Grid.Column="1" Minimum="1" Maximum="10"
+                                                Value="{Binding ScaleDownFactor}" />
+                                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding ScaledDownResolution}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+
+                                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Channel Separation Mode"
+                                                   VerticalAlignment="Center" Margin="0,0,5,0" />
+                                        <ComboBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
+                                                  ItemsSource="{Binding ChannelSeparationMode, Converter={StaticResource EnumValuesToItemSourceConverter}}"
+                                                  SelectedItem="{Binding ChannelSeparationMode}">
+                                        </ComboBox>
+                                    </Grid>
+                                </Border>
+                                <Border Classes="SettingsBox">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="50" />
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding Blur}">Blur</CheckBox>
+                                        <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding BlurSize}"
+                                                IsEnabled="{Binding Blur}" />
+                                        <TextBlock Grid.Column="2" Text="{Binding BlurSize}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="SettingsBox">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="50" />
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox IsChecked="{Binding TimeAverage}">Time Average</CheckBox>
+                                        <Slider Grid.Column="1" Minimum="1" Maximum="100"
+                                                IsEnabled="{Binding TimeAverage}"
+                                                Value="{Binding TimeAverageSampleSize}" />
+                                        <TextBlock Grid.Column="2" Text="{Binding TimeAverageSampleSize}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="SettingsBox">
+                                    <StackPanel>
+                                        <CheckBox IsChecked="{Binding TrimImage}">Trim Image</CheckBox>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="50" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Text="Top" Grid.Column="0" Grid.Row="0"
+                                                       VerticalAlignment="Center"
+                                                       Padding="0,0,10,0" />
+                                            <Slider Grid.Column="1" Grid.Row="0" Minimum="0"
+                                                    Maximum="{Binding TrimTopMax}"
+                                                    IsEnabled="{Binding TrimImage}"
+                                                    Value="{Binding TrimTop}" />
+                                            <TextBlock Grid.Column="2" Grid.Row="0"
+                                                       Text="{Binding TrimTop, StringFormat={}{0}%}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+
+                                            <TextBlock Text="Bottom" Grid.Column="0" Grid.Row="1"
+                                                       VerticalAlignment="Center"
+                                                       Padding="0,0,10,0" />
+                                            <Slider Grid.Column="1" Grid.Row="1" Minimum="0"
+                                                    Maximum="{Binding TrimBottomMax}"
+                                                    IsEnabled="{Binding TrimImage}"
+                                                    Value="{Binding TrimBottom}" />
+                                            <TextBlock Grid.Column="2" Grid.Row="1"
+                                                       Text="{Binding TrimBottom, StringFormat={}{0}%}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+
+                                            <TextBlock Text="Left" Grid.Column="0" Grid.Row="2"
+                                                       VerticalAlignment="Center"
+                                                       Padding="0,0,10,0" />
+                                            <Slider Grid.Column="1" Grid.Row="2" Minimum="0"
+                                                    Maximum="{Binding TrimLeftMax}"
+                                                    IsEnabled="{Binding TrimImage}"
+                                                    Value="{Binding TrimLeft}" />
+                                            <TextBlock Grid.Column="2" Grid.Row="2"
+                                                       Text="{Binding TrimLeft, StringFormat={}{0}%}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+
+                                            <TextBlock Text="Right" Grid.Column="0" Grid.Row="3"
+                                                       VerticalAlignment="Center"
+                                                       Padding="0,0,10,0" />
+                                            <Slider Grid.Column="1" Grid.Row="3" Minimum="0"
+                                                    Maximum="{Binding TrimRightMax}"
+                                                    IsEnabled="{Binding TrimImage}"
+                                                    Value="{Binding TrimRight}" />
+                                            <TextBlock Grid.Column="2" Grid.Row="3"
+                                                       Text="{Binding TrimRight, StringFormat={}{0}%}"
+                                                       HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                                <Border Classes="SettingsBox" Name="UpperLowerThresholds">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="50" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Upper Threshold" Grid.Column="0" Grid.Row="0"
+                                                   VerticalAlignment="Center" Padding="0,0,10,0" />
+                                        <Slider Grid.Column="1" Grid.Row="0" Minimum="{Binding UpperThresholdMin}"
+                                                Maximum="255"
+                                                Value="{Binding UpperThreshold}" />
+                                        <TextBlock Grid.Column="2" Grid.Row="0" Text="{Binding UpperThreshold}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                        <TextBlock Text="Lower Threshold" Grid.Column="0" Grid.Row="1"
+                                                   VerticalAlignment="Center" Padding="0,0,10,0" />
+                                        <Slider Grid.Column="1" Grid.Row="1" Minimum="0"
+                                                Maximum="{Binding LowerThresholdMax}"
+                                                Value="{Binding LowerThreshold}" />
+                                        <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding LowerThreshold}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="Logging">
+                        <StackPanel Orientation="Vertical">
+                            <Label>Red</Label>
+                            <TextBox IsReadOnly="True" Text="{Binding RedTimings}" />
+                            <Label Margin="0,10,0,0">Green</Label>
+                            <TextBox IsReadOnly="True" Text="{Binding GreenTimings}" />
+                            <Label Margin="0,10,0,0">Blue</Label>
+                            <TextBox IsReadOnly="True" Text="{Binding BlueTimings}" />
+                        </StackPanel>
+                    </TabItem>
+                    <TabItem Header="Light control">
+                        <Grid DataContext="{Binding LightControlViewModel}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="IP Address" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center"
+                                       Padding="0,0,10,0" />
+                            <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding IpAddress}" />
+                            <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" Content="(Re-)Connect"
+                                    Click="Button_OnClick" />
+                            <TextBlock Text="State" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
+                                       Padding="0,0,10,0" />
+                            <TextBlock Foreground="Green" Text="Connected" Grid.Row="2" Grid.Column="1"
+                                       IsVisible="{Binding IsConnected}" />
+                            <TextBlock Foreground="Red" Text="Disconnected" Grid.Row="2" Grid.Column="1"
+                                       IsVisible="{Binding IsConnected, Converter={StaticResource InvertBooleanConverter}}" />
+                            <TextBlock Text="Mode" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"
+                                       Padding="0,0,10,0" />
+                            <ComboBox Grid.Row="3" Grid.Column="1"
+                                      ItemsSource="{Binding  Mode, Converter={StaticResource EnumValuesToItemSourceConverter}}"
+                                      SelectedItem="{Binding Mode}">
+                            </ComboBox>
+                            <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
+                                <Border Classes="SettingsBox" IsVisible="{Binding ShowColorPicker}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="50" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+                                        <TextBlock Text="Red" Grid.Column="0" VerticalAlignment="Center"
+                                                   Padding="0,0,10,0" />
+                                        <Slider Grid.Row="0" Grid.Column="1" Minimum="0" Maximum="255"
+                                                Value="{Binding Red}" />
+                                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding Red}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                        <TextBlock Text="Green" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center"
+                                                   Padding="0,0,10,0" />
+                                        <Slider Grid.Column="1" Grid.Row="1" Minimum="0" Maximum="255"
+                                                Value="{Binding Green}" />
+                                        <TextBlock Grid.Column="2" Grid.Row="1" Text="{Binding Green}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                        <TextBlock Text="Blue" Grid.Column="0" Grid.Row="2" VerticalAlignment="Center"
+                                                   Padding="0,0,10,0" />
+                                        <Slider Grid.Column="1" Grid.Row="2" Minimum="0" Maximum="255"
+                                                Value="{Binding Blue}" />
+                                        <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding Blue}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="SettingsBox" IsVisible="{Binding ShowBaseColorPicker}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Base Color" Grid.Column="0" VerticalAlignment="Center"
+                                                   Padding="0,0,10,0" />
+                                        <ComboBox Grid.Column="1"
+                                                  ItemsSource="{Binding BaseColor, Converter={StaticResource EnumValuesToItemSourceConverter}}"
+                                                  SelectedItem="{Binding BaseColor}">
+                                        </ComboBox>
+                                    </Grid>
+                                </Border>
+                                <Border Classes="SettingsBox" IsVisible="{Binding ShowSpeedSlider}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="50" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Speed" Grid.Column="0" VerticalAlignment="Center"
+                                                   Padding="0,0,10,0" />
+                                        <Slider Grid.Column="1" Minimum="1" Maximum="5000"
+                                                Value="{Binding ColorChangeSpeed}" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding ColorChangeSpeed, StringFormat={}{0}ms}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                                <Border Classes="SettingsBox" IsVisible="{Binding ShowBrightness}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="50" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="Brightness" Grid.Column="0" VerticalAlignment="Center"
+                                                   Padding="0,0,10,0" />
+                                        <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding Brightness}" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Brightness}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+
+
+                        </Grid>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </TabItem>
+        <TabItem Header="LED Scanner">
+            <Grid DataContext="{Binding ScanViewModel}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Border Classes="SettingsBox" Grid.Row="0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="Mode" Grid.Column="0" VerticalAlignment="Center" Padding="0,0,10,0" />
+                        <ComboBox Grid.Row="0" Grid.Column="1"
+                                  ItemsSource="{Binding ImageMergeMode, Converter={StaticResource EnumValuesToItemSourceConverter}}"
+                                  SelectedItem="{Binding ImageMergeMode}">
+                        </ComboBox>
+                        <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" Content="StartScan"
+                                Click="StartScan_OnClick" Width="150" HorizontalContentAlignment="Center"
+                                IsVisible="{Binding IsScanning, Converter= {StaticResource InvertBooleanConverter}}" />
+                        <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right"
+                                Width="150" IsVisible="{Binding IsScanning}" HorizontalContentAlignment="Center"
+                                IsEnabled="False">
+                            <TextBlock>
+                                <Run Text="Scanning (" />
+                                <Run Text="{Binding ScanProgress}" />
+                                <Run Text="%)" />
+                            </TextBlock>
+                        </Button>
+                    </Grid>
+                </Border>
+                <Grid Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <ComboBox ItemsSource="{Binding ScanRuns}" SelectedItem="{Binding SelectedScanRun}"
+                                  VerticalAlignment="Stretch" ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                        <ListBox Grid.Row="1" DataContext="{Binding SelectedScanRun}" ItemsSource="{Binding Leds}"
+                                 VerticalAlignment="Stretch" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 SelectedItem="{Binding SelectedLed}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="local:LedScanResult">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Index}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                    <Image Grid.Column="1" Source="{Binding SelectedScanRun.SelectedLed.MergedImage }" />
+                    <Image Grid.Column="2"
+                           DataContext="{Binding DataContext,RelativeSource = {RelativeSource AncestorType=Window}}"
+                           x:DataType="local:MainWindowViewModel" Source="{Binding LastRawFrame }"
+                           VerticalAlignment="Stretch"
+                           HorizontalAlignment="Stretch" />
+                    <ListBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                             ItemsSource="{Binding SelectedScanRun.SelectedLed.LedImages}">
+                        <ListBox.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal"/>
+                            </ItemsPanelTemplate>
+                        </ListBox.ItemsPanel>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate x:DataType="IImage">
+                                <Image Source="{Binding}" Margin="0,0,10,0"></Image>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Grid>
+            </Grid>
+        </TabItem>
+    </TabControl>
+</Window>

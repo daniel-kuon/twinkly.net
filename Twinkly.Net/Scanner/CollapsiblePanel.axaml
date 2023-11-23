@@ -1,0 +1,20 @@
+<UserControl x:Class="Scanner.ExpandingControl"
+             xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:scanner="clr-namespace:Scanner"
+             mc:Ignorable="d"
+             x:DataType="scanner:ExpandingControl">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ContentControl Grid.Row="0"
+                        Content="{Binding Header}" />
+        <ContentControl x:Name="ExpandableContent" Grid.Row="1"
+                        IsVisible="{Binding IsExpanded}"
+                        Content="{Binding Content}" />
+    </Grid>
+</UserControl>
