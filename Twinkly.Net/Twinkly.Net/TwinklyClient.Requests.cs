@@ -223,5 +223,100 @@ public partial class TwinklyClient
     /// <returns>Network status including mode, station, and AP configuration</returns>
     public Task<NetworkStatusResponse> GetNetworkStatus() => ExecuteRequest(new GetNetworkStatusRequest());
 
+    /// <summary>
+    /// Gets LED layout (3D coordinates).
+    /// </summary>
+    /// <returns>LED layout information</returns>
+    public Task<LedLayoutResponse> GetLedLayout() => ExecuteRequest(new GetLedLayoutRequest());
+
+    /// <summary>
+    /// Uploads LED layout (3D coordinates).
+    /// </summary>
+    /// <param name="aspectXY">Aspect ratio XY</param>
+    /// <param name="aspectXZ">Aspect ratio XZ</param>
+    /// <param name="coordinates">Array of 3D coordinates</param>
+    /// <param name="source">Layout source type</param>
+    /// <param name="synthesized">Whether layout is synthesized</param>
+    /// <param name="uuid">Layout UUID</param>
+    public Task SetLedLayout(int aspectXY, int aspectXZ, LedCoordinate[] coordinates, LayoutSource source, bool synthesized, string uuid) 
+        => ExecuteRequest(new SetLedLayoutRequest(aspectXY, aspectXZ, coordinates, source, synthesized, uuid));
+
+    /// <summary>
+    /// Deletes LED layout.
+    /// </summary>
+    public Task DeleteLedLayout() => ExecuteRequest(new DeleteLedLayoutRequest());
+
+    /// <summary>
+    /// Gets movie configuration.
+    /// </summary>
+    /// <returns>Movie configuration</returns>
+    public Task<MovieConfigResponse> GetMovieConfig() => ExecuteRequest(new GetMovieConfigRequest());
+
+    /// <summary>
+    /// Sets movie configuration.
+    /// </summary>
+    /// <param name="frameDelay">Delay between frames in milliseconds</param>
+    /// <param name="ledsNumber">Number of LEDs</param>
+    /// <param name="loopType">Loop type (0 = no loop, 1 = loop)</param>
+    public Task SetMovieConfig(int frameDelay, int ledsNumber, int loopType) => ExecuteRequest(new SetMovieConfigRequest(frameDelay, ledsNumber, loopType));
+
+    /// <summary>
+    /// Gets the current movie.
+    /// </summary>
+    /// <returns>Current movie information</returns>
+    public Task<CurrentMovieResponse> GetCurrentMovie() => ExecuteRequest(new GetCurrentMovieRequest());
+
+    /// <summary>
+    /// Sets the current movie to play.
+    /// </summary>
+    /// <param name="id">Movie ID</param>
+    public Task SetCurrentMovie(int id) => ExecuteRequest(new SetCurrentMovieRequest(id));
+
+    /// <summary>
+    /// Gets list of all movies.
+    /// </summary>
+    /// <returns>Movies information including available capacity</returns>
+    public Task<MoviesResponse> GetMovies() => ExecuteRequest(new GetMoviesRequest());
+
+    /// <summary>
+    /// Deletes all movies.
+    /// </summary>
+    public Task DeleteMovies() => ExecuteRequest(new DeleteMoviesRequest());
+
+    /// <summary>
+    /// Gets the current playlist.
+    /// </summary>
+    /// <returns>Playlist information</returns>
+    public Task<PlaylistResponse> GetPlaylist() => ExecuteRequest(new GetPlaylistRequest());
+
+    /// <summary>
+    /// Deletes the playlist.
+    /// </summary>
+    public Task DeletePlaylist() => ExecuteRequest(new DeletePlaylistRequest());
+
+    /// <summary>
+    /// Gets MQTT configuration.
+    /// </summary>
+    /// <returns>MQTT configuration</returns>
+    public Task<MqttConfigResponse> GetMqttConfig() => ExecuteRequest(new GetMqttConfigRequest());
+
+    /// <summary>
+    /// Gets microphone configuration.
+    /// </summary>
+    /// <returns>Microphone configuration</returns>
+    public Task<MicConfigResponse> GetMicConfig() => ExecuteRequest(new GetMicConfigRequest());
+
+    /// <summary>
+    /// Gets microphone sample.
+    /// </summary>
+    /// <returns>Microphone sample data</returns>
+    public Task<MicSampleResponse> GetMicSample() => ExecuteRequest(new GetMicSampleRequest());
+
+    /// <summary>
+    /// Gets device summary information.
+    /// </summary>
+    /// <returns>Device summary</returns>
+    public Task<SummaryResponse> GetSummary() => ExecuteRequest(new GetSummaryRequest());
+
 }
 

@@ -273,6 +273,118 @@ public record SetSaturationRequest : Request<ICodeResponse>
 /// </summary>
 public record GetNetworkStatusRequest() : Request<NetworkStatusResponse>(HttpMethod.Get, "network/status");
 
+/// <summary>
+/// Gets LED layout (3D coordinates).
+/// </summary>
+public record GetLedLayoutRequest() : Request<LedLayoutResponse>(HttpMethod.Get, "led/layout/full");
+
+/// <summary>
+/// Uploads LED layout (3D coordinates).
+/// </summary>
+/// <param name="AspectXY">Aspect ratio XY</param>
+/// <param name="AspectXZ">Aspect ratio XZ</param>
+/// <param name="Coordinates">Array of 3D coordinates</param>
+/// <param name="Source">Source type</param>
+/// <param name="Synthesized">Whether layout is synthesized</param>
+/// <param name="Uuid">Layout UUID</param>
+public record SetLedLayoutRequest(
+    int AspectXY,
+    int AspectXZ,
+    LedCoordinate[] Coordinates,
+    LayoutSource Source,
+    bool Synthesized,
+    string Uuid) : Request<ICodeResponse>(HttpMethod.Post, "led/layout/full");
+
+/// <summary>
+/// Deletes LED layout.
+/// </summary>
+public record DeleteLedLayoutRequest() : Request<ICodeResponse>(HttpMethod.Delete, "led/layout/full");
+
+/// <summary>
+/// Gets movie configuration.
+/// </summary>
+public record GetMovieConfigRequest() : Request<MovieConfigResponse>(HttpMethod.Get, "led/movie/config");
+
+/// <summary>
+/// Sets movie configuration.
+/// </summary>
+/// <param name="FrameDelay">Delay between frames in milliseconds</param>
+/// <param name="LedsNumber">Number of LEDs</param>
+/// <param name="LoopType">Loop type (0 = no loop, 1 = loop)</param>
+public record SetMovieConfigRequest(int FrameDelay, int LedsNumber, int LoopType) : Request<ICodeResponse>(HttpMethod.Post, "led/movie/config");
+
+/// <summary>
+/// Gets the current movie.
+/// </summary>
+public record GetCurrentMovieRequest() : Request<CurrentMovieResponse>(HttpMethod.Get, "led/movies/current");
+
+/// <summary>
+/// Sets the current movie to play.
+/// </summary>
+/// <param name="Id">Movie ID</param>
+public record SetCurrentMovieRequest(int Id) : Request<ICodeResponse>(HttpMethod.Post, "led/movies/current");
+
+/// <summary>
+/// Gets list of movies.
+/// </summary>
+public record GetMoviesRequest() : Request<MoviesResponse>(HttpMethod.Get, "movies");
+
+/// <summary>
+/// Deletes all movies.
+/// </summary>
+public record DeleteMoviesRequest() : Request<ICodeResponse>(HttpMethod.Delete, "movies");
+
+/// <summary>
+/// Gets the current playlist.
+/// </summary>
+public record GetPlaylistRequest() : Request<PlaylistResponse>(HttpMethod.Get, "playlist");
+
+/// <summary>
+/// Deletes the playlist.
+/// </summary>
+public record DeletePlaylistRequest() : Request<ICodeResponse>(HttpMethod.Delete, "playlist");
+
+/// <summary>
+/// Gets MQTT configuration.
+/// </summary>
+public record GetMqttConfigRequest() : Request<MqttConfigResponse>(HttpMethod.Get, "mqtt/config");
+
+/// <summary>
+/// Gets microphone configuration.
+/// </summary>
+public record GetMicConfigRequest() : Request<MicConfigResponse>(HttpMethod.Get, "mic/config");
+
+/// <summary>
+/// Gets microphone sample.
+/// </summary>
+public record GetMicSampleRequest() : Request<MicSampleResponse>(HttpMethod.Get, "mic/sample");
+
+/// <summary>
+/// Gets device summary information.
+/// </summary>
+public record GetSummaryRequest() : Request<SummaryResponse>(HttpMethod.Get, "summary");
+
+/// <summary>
+/// Represents a 3D coordinate for LED layout.
+/// </summary>
+/// <param name="X">X coordinate</param>
+/// <param name="Y">Y coordinate</param>
+/// <param name="Z">Z coordinate</param>
+public record LedCoordinate(double X, double Y, double Z);
+
+/// <summary>
+/// Layout source type.
+/// </summary>
+[EnumCase(Case.Lower)]
+public enum LayoutSource
+{
+    Linear,
+    [JsonValue("2d")]
+    TwoD,
+    [JsonValue("3d")]
+    ThreeD
+}
+
 [EnumCase(Case.Lower)]
 public enum SaturationMode
 {

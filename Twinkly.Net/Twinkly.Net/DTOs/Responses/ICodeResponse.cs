@@ -192,3 +192,153 @@ public record NetworkAp(
     int PasswordChanged
 );
 
+/// <summary>
+/// Response containing LED layout information.
+/// </summary>
+/// <param name="Code">Response code</param>
+/// <param name="AspectXY">Aspect ratio XY</param>
+/// <param name="AspectXZ">Aspect ratio XZ</param>
+/// <param name="Coordinates">Array of 3D coordinates</param>
+/// <param name="Source">Layout source type</param>
+/// <param name="Synthesized">Whether layout is synthesized</param>
+/// <param name="Uuid">Layout UUID</param>
+public record LedLayoutResponse(
+    ResponseCode Code,
+    int AspectXY,
+    int AspectXZ,
+    LedCoordinate[] Coordinates,
+    LayoutSource Source,
+    bool Synthesized,
+    string Uuid
+) : ICodeResponse;
+
+/// <summary>
+/// Response containing movie configuration.
+/// </summary>
+/// <param name="Code">Response code</param>
+/// <param name="FrameDelay">Delay between frames</param>
+/// <param name="LedsNumber">Number of LEDs</param>
+/// <param name="LoopType">Loop type</param>
+public record MovieConfigResponse(
+    ResponseCode Code,
+    int FrameDelay,
+    int LedsNumber,
+    int LoopType
+) : ICodeResponse;
+
+/// <summary>
+/// Response containing current movie information.
+/// </summary>
+/// <param name="Code">Response code</param>
+/// <param name="Id">Movie ID</param>
+/// <param name="Name">Movie name</param>
+/// <param name="UniqueId">Movie UUID</param>
+/// <param name="DescriptorType">Descriptor type</param>
+public record CurrentMovieResponse(
+    ResponseCode Code,
+    int Id,
+    string? Name = null,
+    string? UniqueId = null,
+    string? DescriptorType = null
+) : ICodeResponse;
+
+/// <summary>
+/// Response containing list of movies.
+/// </summary>
+/// <param name="Code">Response code</param>
+/// <param name="Movies">Array of movies</param>
+/// <param name="AvailableFrames">Available frame capacity</param>
+/// <param name="MaxCapacity">Maximum capacity</param>
+public record MoviesResponse(
+    ResponseCode Code,
+    MovieInfo[] Movies,
+    int AvailableFrames,
+    int MaxCapacity
+) : ICodeResponse;
+
+/// <summary>
+/// Information about a movie.
+/// </summary>
+/// <param name="Id">Movie ID</param>
+/// <param name="Name">Movie name</param>
+/// <param name="UniqueId">Movie UUID</param>
+/// <param name="DescriptorType">Descriptor type</param>
+/// <param name="LedsNumber">Number of LEDs</param>
+/// <param name="FramesNumber">Number of frames</param>
+/// <param name="Fps">Frames per second</param>
+public record MovieInfo(
+    int Id,
+    string Name,
+    string UniqueId,
+    string DescriptorType,
+    int LedsNumber,
+    int FramesNumber,
+    int Fps
+);
+
+/// <summary>
+/// Response containing playlist information.
+/// </summary>
+/// <param name="Code">Response code</param>
+/// <param name="Entries">Array of playlist entries</param>
+public record PlaylistResponse(
+    ResponseCode Code,
+    PlaylistEntry[] Entries
+) : ICodeResponse;
+
+/// <summary>
+/// Playlist entry information.
+/// </summary>
+/// <param name="Id">Movie ID</param>
+/// <param name="UniqueId">Movie UUID</param>
+/// <param name="Name">Movie name</param>
+/// <param name="Duration">Duration in milliseconds</param>
+public record PlaylistEntry(
+    int Id,
+    string UniqueId,
+    string Name,
+    int Duration
+);
+
+/// <summary>
+/// Response containing MQTT configuration.
+/// </summary>
+/// <param name="Code">Response code</param>
+/// <param name="BrokerHost">MQTT broker host</param>
+/// <param name="BrokerPort">MQTT broker port</param>
+/// <param name="ClientId">MQTT client ID</param>
+/// <param name="User">MQTT username</param>
+/// <param name="KeepAliveInterval">Keep alive interval</param>
+public record MqttConfigResponse(
+    ResponseCode Code,
+    string BrokerHost,
+    int BrokerPort,
+    string ClientId,
+    string User,
+    int KeepAliveInterval
+) : ICodeResponse;
+
+/// <summary>
+/// Response containing microphone configuration.
+/// </summary>
+/// <param name="Code">Response code</param>
+public record MicConfigResponse(
+    ResponseCode Code
+) : ICodeResponse;
+
+/// <summary>
+/// Response containing microphone sample data.
+/// </summary>
+/// <param name="Code">Response code</param>
+public record MicSampleResponse(
+    ResponseCode Code
+) : ICodeResponse;
+
+/// <summary>
+/// Response containing device summary information.
+/// </summary>
+/// <param name="Code">Response code</param>
+public record SummaryResponse(
+    ResponseCode Code
+) : ICodeResponse;
+
