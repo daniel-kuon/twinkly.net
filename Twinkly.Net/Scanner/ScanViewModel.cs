@@ -6,17 +6,23 @@ namespace Scanner;
 
 public class ScanViewModel : ReactiveObject
 {
-    private ImageMergeMode _imageMergeMode;
+    private int _imageMergeModeIndex;
     private int _threshold;
     private ScanRun? _selectedScanRun;
     private int _scanProgress;
     private bool _isScanning;
     private IImage? _lastMergedImage;
 
+    public int ImageMergeModeIndex
+    {
+        get => _imageMergeModeIndex;
+        set => this.RaiseAndSetIfChanged(ref _imageMergeModeIndex, value);
+    }
+
     public ImageMergeMode ImageMergeMode
     {
-        get => _imageMergeMode;
-        set => this.RaiseAndSetIfChanged(ref _imageMergeMode, value);
+        get => (ImageMergeMode) _imageMergeModeIndex;
+        set => ImageMergeModeIndex = (int) value;
     }
 
     public int Threshold

@@ -9,93 +9,115 @@ namespace Scanner;
 
 public class LightControlViewModel : ReactiveObject
 {
-    private int _red;
-
-    public int Red
+    public byte Red
     {
-        get => _red;
-        set => this.RaiseAndSetIfChanged(ref _red, value);
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
     }
 
-    private int _blue;
-
-    public int Blue
+    public byte Blue
     {
-        get => _blue;
-        set => this.RaiseAndSetIfChanged(ref _blue, value);
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
     }
 
-    private int _green;
-
-    public int Green
+    public byte Green
     {
-        get => _green;
-        set => this.RaiseAndSetIfChanged(ref _green, value);
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
     }
 
-    private byte _brightness;
+    public byte White
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    }
 
     public byte Brightness
     {
-        get => _brightness;
-        set => this.RaiseAndSetIfChanged(ref _brightness, value);
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
     }
 
-    private BaseColor _baseColor;
+    public int BaseColorIndex
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    }
 
     public BaseColor BaseColor
     {
-        get => _baseColor;
-        set => this.RaiseAndSetIfChanged(ref _baseColor, value);
+        get => (BaseColor)BaseColorIndex;
+        set => BaseColorIndex = (int)value;
     }
-
-    private int _colorChangeSpeed;
 
     public int ColorChangeSpeed
     {
-        get => _colorChangeSpeed;
-        set => this.RaiseAndSetIfChanged(ref _colorChangeSpeed, Math.Max(1,value));
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, Math.Max(1, value));
     }
 
-    private LightControlMode _mode;
-
-    public LightControlMode Mode
+    public int ModeIndex
     {
-        get => _mode;
+        get;
         set
         {
-            this.RaiseAndSetIfChanged(ref _mode, value);
+            this.RaiseAndSetIfChanged(ref field, value);
             this.RaisePropertyChanged(nameof(ShowColorPicker));
             this.RaisePropertyChanged(nameof(ShowBaseColorPicker));
             this.RaisePropertyChanged(nameof(ShowBrightness));
             this.RaisePropertyChanged(nameof(ShowSpeedSlider));
+            this.RaisePropertyChanged(nameof(Mode));
         }
     }
 
-    private string _ipAddress = "";
+    public LightControlMode Mode
+    {
+        get => (LightControlMode)ModeIndex;
+        set => ModeIndex = (int)value;
+    }
 
     public string IpAddress
     {
-        get => _ipAddress;
-        set => this.RaiseAndSetIfChanged(ref _ipAddress, value);
-    }
-
-    private bool _isConnected;
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    } = "";
 
     public bool IsConnected
     {
-        get => _isConnected;
-        set => this.RaiseAndSetIfChanged(ref _isConnected, value);
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
     }
 
-    [JsonIgnore] public bool ShowColorPicker => Mode == LightControlMode.CustomColor;
+    public bool RgbwMode
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    }
+
+    public bool Activated
+    {
+        get;
+        set
+        {
+            this.RaiseAndSetIfChanged(ref field, value);
+            this.RaisePropertyChanged(nameof(Mode));
+        }
+    }
+
+    public string Timings
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    }
+
+    [JsonIgnore] public bool ShowColorPicker => Mode is LightControlMode.CustomColor or LightControlMode.LedScanPattern;
 
     [JsonIgnore] public bool ShowBaseColorPicker => Mode == LightControlMode.BaseColor;
 
     [JsonIgnore]
     public bool ShowBrightness =>
-        Mode is LightControlMode.BaseColor or LightControlMode.ColorChange or LightControlMode.LedScanPattern;
+        Mode is LightControlMode.BaseColor or LightControlMode.ColorChange;
 
     [JsonIgnore] public bool ShowSpeedSlider => Mode is LightControlMode.ColorChange or LightControlMode.LedScanPattern;
-
 }

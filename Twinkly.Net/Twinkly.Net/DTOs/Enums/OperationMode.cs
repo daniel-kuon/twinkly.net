@@ -1,5 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace Twinkly.Net.DTOs.Enums;
 
+[EnumCase(Case.Lower)]
 public enum OperationMode
 {
     /// <summary>

@@ -1,136 +1,60 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using Twinkly.Net.DTOs.Enums;
 using Twinkly.Net.DTOs.Responses;
 
 namespace Twinkly.Net.DTOs.Requests;
 
-public class LoginRequest : Request<LoginResponse>
+public record LoginRequest(string Challenge) : Request<LoginResponse>(HttpMethod.Post, "login", false);
+
+public abstract record Request<TResponse>([property: JsonIgnore] HttpMethod Method, string Path, [property: JsonIgnore] bool RequiresAuthentication = true)
+    where TResponse : ICodeResponse
 {
-    public LoginRequest(string challenge) : base(HttpMethod.Post, "login", false)
+    [JsonIgnore] public string Path
     {
-        Challenge = challenge;
-    }
-
-    public string Challenge { get; set; }
+        get => $"/xled/v1/{field}";
+    } = Path;
 }
+public record VerifyRequest(
+    [property: JsonPropertyName("challenge-response")]
+    string ChallengeResponse) : Request<ICodeResponse>(HttpMethod.Post, "verify");
 
-public abstract class Request<TResponse> where TResponse : CodeResponse
+public record LogoutRequest() : Request<ICodeResponse>(HttpMethod.Post, "logout");
+
+public record DeviceDetailsRequest() : Request<IDeviceDetailsResponse>(HttpMethod.Get, "gestalt");
+
+public record SetDeviceNameRequest(string Name) : Request<DeviceNameResponse>(HttpMethod.Post, "device_name");
+
+public record GetDeviceNameRequest() : Request<DeviceNameResponse>(HttpMethod.Get, "device_name");
+
+public record SetLedModeRequest(OperationMode Mode) : Request<LedOperationModeResponse>(HttpMethod.Post, "led/mode");
+
+public record GetLedModeRequest() : Request<LedOperationModeResponse>(HttpMethod.Get, "led/mode");
+
+public record SetHsvColorRequest(byte Hue, byte Saturation, byte Value)
+    : Request<ICodeResponse>(HttpMethod.Post, "led/color");
+
+public record SetRgbColorRequest(byte Red, byte Green, byte Blue) : Request<ICodeResponse>(HttpMethod.Post, "led/color");
+
+public record SetRgbwColorRequest(
+    byte Red,
+    byte Green,
+    byte Blue,
+    byte White) : Request<ICodeResponse>(HttpMethod.Post, "led/color");
+
+public record SetAwwColorRequest : SetRgbColorRequest
 {
-    private readonly string _path;
-
-    protected Request(HttpMethod method, string path, bool requiresAuthentication = true)
-    {
-        _path = path;
-        Method = method;
-        RequiresAuthentication = requiresAuthentication;
-    }
-
-    [JsonIgnore] public HttpMethod Method { get; }
-
-    [JsonIgnore] public string Path => $"/xled/v1/{_path}";
-
-
-    [JsonIgnore] public bool RequiresAuthentication { get; }
-}
-
-public class VerifyRequest : Request<CodeResponse>
-{
-    public VerifyRequest(string challengeResponse) : base(HttpMethod.Post, "verify")
-    {
-        ChallengeResponse = challengeResponse;
-    }
-
-    [JsonPropertyName("challenge-response")]
-    public string ChallengeResponse { get; set; }
-}
-
-public class LogoutRequest : Request<CodeResponse>
-{
-    public LogoutRequest() : base(HttpMethod.Post, "logout")
+    public SetAwwColorRequest(byte amber, byte warmWhite, byte coldWhite) : base(amber, warmWhite, coldWhite)
     {
     }
 }
 
-public class DeviceDetailsRequest : Request<DeviceDetailsResponse>
+public record GetColorRequest() : Request<ColorResponse>(HttpMethod.Get, "led/color");
+
+public record SetBrightnessRequest : Request<ICodeResponse>
 {
-    public DeviceDetailsRequest() : base(HttpMethod.Get, "gestalt")
-    {
-    }
-}
-
-public class SetDeviceNameRequest : Request<DeviceNameResponse>
-{
-    public SetDeviceNameRequest(string name) : base(HttpMethod.Post, "device_name")
-    {
-        Name = name;
-    }
-
-    public string Name { get; set; }
-}
-
-public class GetDeviceNameRequest : Request<DeviceNameResponse>
-{
-    public GetDeviceNameRequest() : base(HttpMethod.Get, "device_name")
-    {
-    }
-}
-
-public class SetLedModeRequest : Request<LedOperationModeResponse>
-{
-    public SetLedModeRequest(OperationMode mode) : base(HttpMethod.Post, "led/mode")
-    {
-        Mode = mode;
-    }
-
-    public OperationMode Mode { get; set; }
-}
-
-public class GetLedModeRequest : Request<LedOperationModeResponse>
-{
-    public GetLedModeRequest() : base(HttpMethod.Get, "led/mode")
-    {
-    }
-}
-
-public class SetHsvColorRequest : Request<CodeResponse>
-{
-    public SetHsvColorRequest(int hue, int saturation, int value) : base(HttpMethod.Post, "led/color")
-    {
-        Hue = hue;
-        Saturation = saturation;
-        Value = value;
-    }
-
-    public int Hue { get; set; }
-    public int Saturation { get; set; }
-    public int Value { get; set; }
-}
-
-public class SetRgbColorRequest : Request<CodeResponse>
-{
-    public SetRgbColorRequest(int red, int green, int blue) : base(HttpMethod.Post, "led/color")
-    {
-        Red = red;
-        Green = green;
-        Blue = blue;
-    }
-
-    public int Red { get; set; }
-    public int Green { get; set; }
-    public int Blue { get; set; }
-}
-
-public class GetColorRequest : Request<ColorResponse>
-{
-    public GetColorRequest() : base(HttpMethod.Get, "led/color")
-    {
-    }
-}
-
-public class SetBrightnessRequest : Request<CodeResponse>
-{
-    public SetBrightnessRequest(int brightness, BrightnessMode? mode = BrightnessMode.Enabled,
-        BrightnessType? type = BrightnessType.Absolute) : this(brightness, type, mode)
+    public SetBrightnessRequest(int brightness, BrightnessMode mode = BrightnessMode.Enabled,
+                                BrightnessType type = BrightnessType.Absolute) : this(brightness, type, mode)
     {
     }
 
@@ -138,28 +62,19 @@ public class SetBrightnessRequest : Request<CodeResponse>
     {
     }
 
-    private SetBrightnessRequest(int? brightness, BrightnessType? type, BrightnessMode? mode) : base(HttpMethod.Post,
+    private SetBrightnessRequest(int? brightness, BrightnessType? type, BrightnessMode mode) : base(HttpMethod.Post,
         "led/out/brightness")
     {
         Brightness = brightness;
-        if (type.HasValue)
-        {
-            Type = type.Value switch
-            {
-                BrightnessType.Absolute => "A",
-                BrightnessType.Relative => "R",
-                _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
-            };
-        }
-
-        Mode = mode?.ToString().ToLower();
+        Type = type;
+        Mode = mode;
     }
 
-    public string? Mode { get; }
+    public BrightnessMode Mode { get; init; }
 
-    public string? Type { get; }
+    public BrightnessType? Type { get; init; }
 
-    public int? Brightness { get; }
+    public int? Brightness { get; init; }
 }
 
 public enum BrightnessType
@@ -167,23 +82,21 @@ public enum BrightnessType
     /// <summary>
     /// Absolute brightness (0-100)
     /// </summary>
+    [JsonValue("A")]
     Absolute,
 
     /// <summary>
     /// Relative brightness (-100 - 100)
     /// </summary>
+    [JsonValue("R")]
     Relative
 }
 
+[EnumCase(Case.Lower)]
 public enum BrightnessMode
 {
     Enabled,
     Disabled
 }
 
-public class GetBrightnessRequest : Request<BrightnessResponse>
-{
-    public GetBrightnessRequest() : base(HttpMethod.Get, "led/out/brightness")
-    {
-    }
-}
+public record GetBrightnessRequest() : Request<BrightnessResponse>(HttpMethod.Get, "led/out/brightness");

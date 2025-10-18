@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Collections;
+using System.Net;
 using Microsoft.Extensions.Logging;
 using Twinkly.Net;
 using Twinkly.Net.DTOs.Enums;
@@ -7,15 +8,53 @@ using Twinkly.Net.DTOs.Enums;
 var ipString = ""; //Console.ReadLine();
 if (string.IsNullOrWhiteSpace(ipString))
 {
-    ipString = "192.168.178.51";
+    ipString = "192.168.178.63";
 }
 
 var ipAddress = IPAddress.Parse(ipString);
 
-var client = new TwinklyClient(ipAddress, new LoggerFactory().CreateLogger<TwinklyClient>(), new HttpClient());
+var client =await  TwinklyClient.Create(ipAddress, new LoggerFactory().CreateLogger<TwinklyClient>(), new HttpClient());
+//
+// await client.Connect();
+// await client.SetRgbColor(0, 255, 0);
 
-await client.Connect();
-await client.SetRgbColor(255, 0, 0);
+while (true)
+{
+    var color = await client.GetColor();
+    await Task.Delay(500);
+    Console.Clear();
+    Console.WriteLine(color);
+}
+
+var arr = new byte[400][];
+
+for (var i = 0; i < arr.Length; i++)
+{
+    arr[i] = [0, 0, 0];
+}
+
+var a = 0;
+while (true)
+{
+    for (var i = 0; i < arr.Length; i++)
+    {
+        arr[i][1] = (byte)(arr[i][1] * 8 / 10);
+    }
+
+    var count = 5;
+    var space = arr.Length / count;
+    for (var i = 0; i < count; i++)
+    {
+        var index = (a + i * space) % arr.Length;
+        arr[index][1] = 255;
+    }
+    a++;
+    a %= arr.Length;
+    await client.SendUdpFrame(arr);
+
+    await Task.Delay(50);
+}
+
 
 var ledIndexRepresentation = new List<int[]>();
 for (var i = 0; i < client.LedsCount; i++)
@@ -29,15 +68,15 @@ Byte[] blue;
 
 if (client.LedProfile == LedProfile.Rgb)
 {
-    red = new byte[] { 255, 0, 0 };
-    green = new byte[] { 0, 255, 0 };
-    blue = new byte[] { 0, 0, 255 };
+    red = [255, 0, 0];
+    green = [0, 255, 0];
+    blue = [0, 0, 255];
 }
 else
 {
-    red = new byte[] { 0, 255, 0, 0 };
-    green = new byte[] { 0, 0, 255, 0 };
-    blue = new byte[] { 0, 0, 0, 255 };
+    red = [0, 255, 0, 0];
+    green = [0, 0, 255, 0];
+    blue = [0, 0, 0, 255];
 }
 
 while (true)
@@ -62,7 +101,7 @@ while (true)
 
 while (true)
 {
-    var brightness = 150;
+    byte brightness = 150;
     await client.SetRgbColor(brightness, 0, 0);
     Console.ReadKey();
     await client.SetRgbColor(0, brightness, 0);
@@ -73,7 +112,7 @@ while (true)
 
 while (true)
 {
-    var brightness = 255;
+    byte brightness = 255;
     await client.SetRgbColor(brightness, 0, 0);
     await Task.Delay(1000);
     await client.SetRgbColor(0, brightness, 0);

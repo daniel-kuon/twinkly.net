@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Globalization;
-using System.Linq;
 using Avalonia.Data.Converters;
-using FlashCap;
 
 namespace Scanner;
 
-public class VideoCharacteristicsToStringConverter : IValueConverter
+public class InvertBooleanConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is VideoCharacteristics videoCharacteristics)
+        if (value is bool booleanValue)
         {
-            return $"{videoCharacteristics.Width}x{videoCharacteristics.Height}";
+            return !booleanValue;
         }
 
         return null;

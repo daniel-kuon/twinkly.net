@@ -2,9 +2,10 @@
 
 public class LightControlSettings
 {
-    public int Red { get; set; }
-    public int Blue { get; set; }
-    public int Green { get; set; }
+    public byte Red { get; set; }
+    public byte Blue { get; set; }
+    public byte Green { get; set; }
+    public byte White { get; set; }
     public byte Brightness { get; set; }
     public BaseColor BaseColor { get; set; }
     public int ColorChangeSpeed { get; set; }
@@ -14,28 +15,13 @@ public class LightControlSettings
 
     public static LightControlSettings FromViewModel(LightControlViewModel viewModel)
     {
-        return new LightControlSettings
-        {
-            Red = viewModel.Red,
-            Blue = viewModel.Blue,
-            Green = viewModel.Green,
-            Brightness = viewModel.Brightness,
-            BaseColor = viewModel.BaseColor,
-            ColorChangeSpeed = viewModel.ColorChangeSpeed,
-            Mode = viewModel.Mode,
-            IpAddress = viewModel.IpAddress
-        };
+        var settings = new LightControlSettings();
+        Settings.CopySameNameProperties(viewModel, settings);
+        return settings;
     }
 
     public void CopyToViewModel(LightControlViewModel viewModel)
     {
-        viewModel.Red = Red;
-        viewModel.Blue = Blue;
-        viewModel.Green = Green;
-        viewModel.Brightness = Brightness;
-        viewModel.BaseColor = BaseColor;
-        viewModel.ColorChangeSpeed = ColorChangeSpeed;
-        viewModel.Mode = Mode;
-        viewModel.IpAddress = IpAddress;
+        Settings.CopySameNameProperties(this, viewModel);
     }
 }

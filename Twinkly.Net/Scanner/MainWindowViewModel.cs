@@ -9,9 +9,9 @@ namespace Scanner;
 
 public class MainWindowViewModel : ReactiveObject
 {
-    private IImage? _blueChannel;
+    private IImage? _lastInputFrame;
     private string _blueTimings = "";
-    private IImage? _greenChannel;
+    private IImage? _overlayChannel;
     private string _greenTimings = "";
     private IImage? _redChannel;
     private string _redTimings = "";
@@ -31,7 +31,7 @@ public class MainWindowViewModel : ReactiveObject
     private int _scaleDownFactor = 1;
     private bool _blur;
     private int _blurSize = 3;
-    private ChannelSeparationMode _channelSeparationMode;
+    private int _channelSeparationModeIndex;
 
     public ObservableCollection<CaptureDeviceDescriptor> CameraList { get; } = new();
     public ObservableCollection<VideoCharacteristics> CharacteristicList { get; } = new();
@@ -58,16 +58,16 @@ public class MainWindowViewModel : ReactiveObject
         set => this.RaiseAndSetIfChanged(ref _redChannel, value);
     }
 
-    public IImage? GreenChannel
+    public IImage? OverlayChannel
     {
-        get => _greenChannel;
-        set => this.RaiseAndSetIfChanged(ref _greenChannel, value);
+        get => _overlayChannel;
+        set => this.RaiseAndSetIfChanged(ref _overlayChannel, value);
     }
 
-    public IImage? BlueChannel
+    public IImage? LastInputFrame
     {
-        get => _blueChannel;
-        set => this.RaiseAndSetIfChanged(ref _blueChannel, value);
+        get => _lastInputFrame;
+        set => this.RaiseAndSetIfChanged(ref _lastInputFrame, value);
     }
 
     public bool TimeAverage
@@ -195,6 +195,7 @@ public class MainWindowViewModel : ReactiveObject
         get => _scaleDownFactor;
         set
         {
+            value = Math.Clamp(value, 1, 100);
             this.RaiseAndSetIfChanged(ref _scaleDownFactor, value);
             this.RaisePropertyChanged(nameof(ScaledDownResolution));
         }
@@ -204,27 +205,47 @@ public class MainWindowViewModel : ReactiveObject
         ? $"{SelectedCharacteristic?.Width / ScaleDownFactor}x{SelectedCharacteristic?.Height / ScaleDownFactor}"
         : "";
 
+    public int ChannelSeparationModeIndex
+    {
+        get => _channelSeparationModeIndex;
+        set => this.RaiseAndSetIfChanged(ref _channelSeparationModeIndex, value);
+    }
+
     public ChannelSeparationMode ChannelSeparationMode
     {
-        get => _channelSeparationMode;
-        set => this.RaiseAndSetIfChanged(ref _channelSeparationMode, value);
+        get => (ChannelSeparationMode)ChannelSeparationModeIndex;
+        set => ChannelSeparationModeIndex = (int)value;
     }
 
     public LightControlViewModel LightControlViewModel { get; } = new();
     public ScanViewModel ScanViewModel { get; } = new();
-    private IImage? _lastRawFrame;
+    private IImage? _lastProcessedFrame;
 
     public IImage? LastRawFrame
     {
-        get => _lastRawFrame;
-        set => this.RaiseAndSetIfChanged(ref _lastRawFrame, value);
+        get => _lastProcessedFrame;
+        set => this.RaiseAndSetIfChanged(ref _lastProcessedFrame, value);
     }
 
-    private MainWindowTabItem _selectedTab;
+    private int _selectedTabIndex;
+
+    public int SelectedTabIndex
+    {
+        get => _selectedTabIndex;
+        set => this.RaiseAndSetIfChanged(ref _selectedTabIndex, value);
+    }
 
     public MainWindowTabItem SelectedTab
     {
-        get => _selectedTab;
-        set => this.RaiseAndSetIfChanged(ref _selectedTab, value);
+        get => (MainWindowTabItem)SelectedTabIndex;
+        set => SelectedTabIndex = (int)value;
     }
+
+    private bool _subtractBaseImage;
+    public bool SubtractBaseImage
+    {
+        get => _subtractBaseImage;
+        set => this.RaiseAndSetIfChanged(ref _subtractBaseImage, value);
+    }
+
 }

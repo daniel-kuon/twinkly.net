@@ -14,12 +14,11 @@
         <local:VideoCharacteristicsToStringConverter x:Key="VideoCharacteristicsToStringConverter" />
         <local:EnumValuesToItemSourceConverter x:Key="EnumValuesToItemSourceConverter" />
         <local:InvertBooleanConverter x:Key="InvertBooleanConverter" />
-        <local:MainWindowTabItemEnumConverter x:Key="MainWindowTabItemEnumConverter" />
     </Window.Resources>
     <TabControl
-        SelectedValueBinding="{Binding  SelectedTab, Converter={StaticResource MainWindowTabItemEnumConverter}}">
+        SelectedIndex="{Binding  SelectedTabIndex}">
         <TabItem Header="Webcam live configuration">
-            <Grid>
+            <Grid Grid.Row="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -31,26 +30,11 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Image Grid.Row="2" Grid.Column="0" Stretch="Uniform" Source="{Binding RedChannel}" />
-                <Label Grid.Row="2" Grid.Column="0" Background="Red" Foreground="White" HorizontalAlignment="Left"
-                       VerticalAlignment="Top">
-                    Red Channel
-                </Label>
-                <Label Grid.Row="2" Grid.Column="1" Background="Green" Foreground="White" HorizontalAlignment="Left"
-                       VerticalAlignment="Top">
-                    Green Channel
-                </Label>
-                <Image Grid.Row="2" Grid.Column="1" Source="{Binding GreenChannel}" />
-                <Label Grid.Row="3" Grid.Column="0" Background="Blue" Foreground="White" HorizontalAlignment="Left"
-                       VerticalAlignment="Top">
-                    Blue Channel
-                </Label>
-                <Image Grid.Row="3" Grid.Column="0" Source="{Binding BlueChannel}" />
-                <Label Grid.Row="3" Grid.Column="1" Background="Black" Foreground="White" HorizontalAlignment="Left"
-                       VerticalAlignment="Top">
-                    Mixed Channels
-                </Label>
-                <Image Grid.Row="3" Grid.Column="1" Source="{Binding LastRawFrame}" />
+                <local:CustomImageControl Grid.Row="2" Grid.Column="0" Source="{Binding LastInputFrame}" Title="Input" />
+                <local:CustomImageControl Grid.Row="2" Grid.Column="1" Source="{Binding LastRawFrame}"
+                                          Title="Processing Result" />
+                <local:CustomImageControl Grid.Row="3" Grid.Column="0" Source="{Binding OverlayChannel}"
+                                          Title="Overlay" />
 
 
                 <TabControl Grid.Row="2" Grid.Column="2" Grid.RowSpan="2">
@@ -65,6 +49,7 @@
                                             <ColumnDefinition Width="100" />
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
@@ -103,9 +88,17 @@
                                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Channel Separation Mode"
                                                    VerticalAlignment="Center" Margin="0,0,5,0" />
                                         <ComboBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2"
-                                                  ItemsSource="{Binding ChannelSeparationMode, Converter={StaticResource EnumValuesToItemSourceConverter}}"
-                                                  SelectedItem="{Binding ChannelSeparationMode}">
+                                                  ItemsSource="{Binding ChannelSeparationMode, Converter={StaticResource EnumValuesToItemSourceConverter}, Mode=OneTime}"
+                                                  SelectedIndex="{Binding ChannelSeparationModeIndex}">
                                         </ComboBox>
+                                        <CheckBox Grid.Row="4" Grid.Column="0" IsChecked="{Binding SubtractBaseImage}">
+                                            Use
+                                            Base Image
+                                        </CheckBox>
+                                        <Button Grid.Row="4" Grid.Column="1" Content="Capture Base Image"
+                                                HorizontalAlignment="Right" Grid.ColumnSpan="2"
+                                                Click="CaptureBaseImage_OnClick">
+                                        </Button>
                                     </Grid>
                                 </Border>
                                 <Border Classes="SettingsBox">
@@ -115,25 +108,22 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="50" />
                                         </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
                                         <CheckBox Grid.Column="0" IsChecked="{Binding Blur}">Blur</CheckBox>
-                                        <Slider Grid.Column="1" Minimum="0" Maximum="100" Value="{Binding BlurSize}"
+                                        <Slider Grid.Row="0" Grid.Column="1" Minimum="0" Maximum="100"
+                                                Value="{Binding BlurSize}"
                                                 IsEnabled="{Binding Blur}" />
-                                        <TextBlock Grid.Column="2" Text="{Binding BlurSize}"
+                                        <TextBlock Grid.Row="0" Grid.Column="2" Text="{Binding BlurSize}"
                                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
-                                    </Grid>
-                                </Border>
-                                <Border Classes="SettingsBox">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="50" />
-                                        </Grid.ColumnDefinitions>
-                                        <CheckBox IsChecked="{Binding TimeAverage}">Time Average</CheckBox>
-                                        <Slider Grid.Column="1" Minimum="1" Maximum="100"
+                                        <CheckBox Grid.Row="1" Grid.Column="0" IsChecked="{Binding TimeAverage}">Time Average</CheckBox>
+                                        <Slider Grid.Row="1" Grid.Column="1" Minimum="1" Maximum="100"
                                                 IsEnabled="{Binding TimeAverage}"
                                                 Value="{Binding TimeAverageSampleSize}" />
-                                        <TextBlock Grid.Column="2" Text="{Binding TimeAverageSampleSize}"
+                                        <TextBlock Grid.Row="1"
+                                                   Grid.Column="2" Text="{Binding TimeAverageSampleSize}"
                                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
                                     </Grid>
                                 </Border>
@@ -236,6 +226,8 @@
                             <TextBox IsReadOnly="True" Text="{Binding GreenTimings}" />
                             <Label Margin="0,10,0,0">Blue</Label>
                             <TextBox IsReadOnly="True" Text="{Binding BlueTimings}" />
+                            <Label Margin="0,10,0,0">Blue</Label>
+                            <TextBox IsReadOnly="True" Text="{Binding LightControlViewModel.Timings}" />
                         </StackPanel>
                     </TabItem>
                     <TabItem Header="Light control">
@@ -255,7 +247,7 @@
                                        Padding="0,0,10,0" />
                             <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding IpAddress}" />
                             <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" Content="(Re-)Connect"
-                                    Click="Button_OnClick" />
+                                    Click="Connect_OnClick" />
                             <TextBlock Text="State" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center"
                                        Padding="0,0,10,0" />
                             <TextBlock Foreground="Green" Text="Connected" Grid.Row="2" Grid.Column="1"
@@ -265,8 +257,8 @@
                             <TextBlock Text="Mode" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center"
                                        Padding="0,0,10,0" />
                             <ComboBox Grid.Row="3" Grid.Column="1"
-                                      ItemsSource="{Binding  Mode, Converter={StaticResource EnumValuesToItemSourceConverter}}"
-                                      SelectedItem="{Binding Mode}">
+                                      ItemsSource="{Binding  Mode, Converter={StaticResource EnumValuesToItemSourceConverter}, Mode=OneTime}"
+                                      SelectedIndex="{Binding ModeIndex}">
                             </ComboBox>
                             <StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Vertical">
                                 <Border Classes="SettingsBox" IsVisible="{Binding ShowColorPicker}">
@@ -277,6 +269,7 @@
                                             <ColumnDefinition Width="50" />
                                         </Grid.ColumnDefinitions>
                                         <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
@@ -299,6 +292,14 @@
                                                 Value="{Binding Blue}" />
                                         <TextBlock Grid.Column="2" Grid.Row="2" Text="{Binding Blue}"
                                                    HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                        <TextBlock Text="White" Grid.Column="0" Grid.Row="3" VerticalAlignment="Center"
+                                                   Padding="0,0,10,0" IsVisible="{Binding RgbwMode}" />
+                                        <Slider Grid.Column="1" Grid.Row="3" Minimum="0" Maximum="255"
+                                                Value="{Binding White}" IsVisible="{Binding RgbwMode}" />
+                                        <TextBlock Grid.Column="2" Grid.Row="3" Text="{Binding White}"
+                                                   HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   IsVisible="{Binding RgbwMode}" />
+
                                     </Grid>
                                 </Border>
                                 <Border Classes="SettingsBox" IsVisible="{Binding ShowBaseColorPicker}">
@@ -310,8 +311,8 @@
                                         <TextBlock Text="Base Color" Grid.Column="0" VerticalAlignment="Center"
                                                    Padding="0,0,10,0" />
                                         <ComboBox Grid.Column="1"
-                                                  ItemsSource="{Binding BaseColor, Converter={StaticResource EnumValuesToItemSourceConverter}}"
-                                                  SelectedItem="{Binding BaseColor}">
+                                                  ItemsSource="{Binding BaseColor, Converter={StaticResource EnumValuesToItemSourceConverter}, Mode=OneTime}"
+                                                  SelectedIndex="{Binding BaseColorIndex}">
                                         </ComboBox>
                                     </Grid>
                                 </Border>
@@ -372,8 +373,8 @@
                         </Grid.RowDefinitions>
                         <TextBlock Text="Mode" Grid.Column="0" VerticalAlignment="Center" Padding="0,0,10,0" />
                         <ComboBox Grid.Row="0" Grid.Column="1"
-                                  ItemsSource="{Binding ImageMergeMode, Converter={StaticResource EnumValuesToItemSourceConverter}}"
-                                  SelectedItem="{Binding ImageMergeMode}">
+                                  ItemsSource="{Binding ImageMergeMode, Converter={StaticResource EnumValuesToItemSourceConverter}, Mode=OneTime}"
+                                  SelectedIndex="{Binding ImageMergeModeIndex}">
                         </ComboBox>
                         <Button Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" Content="StartScan"
                                 Click="StartScan_OnClick" Width="150" HorizontalContentAlignment="Center"
@@ -389,7 +390,7 @@
                         </Button>
                     </Grid>
                 </Border>
-                <Grid Row="1">
+                <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
@@ -411,29 +412,34 @@
                                  SelectedItem="{Binding SelectedLed}">
                             <ListBox.ItemTemplate>
                                 <DataTemplate DataType="local:LedScanResult">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Index}" />
-                                    </StackPanel>
+                                    <TextBlock Text="{Binding Description}" Background="{Binding BackgroundColor}" />
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
                     </Grid>
-                    <Image Grid.Column="1" Source="{Binding SelectedScanRun.SelectedLed.MergedImage }" />
-                    <Image Grid.Column="2"
-                           DataContext="{Binding DataContext,RelativeSource = {RelativeSource AncestorType=Window}}"
-                           x:DataType="local:MainWindowViewModel" Source="{Binding LastRawFrame }"
-                           VerticalAlignment="Stretch"
-                           HorizontalAlignment="Stretch" />
+                    <local:CustomImageControl Grid.Row="0" x:Name="MergedImage" Grid.Column="1"
+                                              Source="{Binding SelectedScanRun.SelectedLed.MergedImage }"
+                                              Title="Merged Image"
+                                              MarkerCenter="{Binding SelectedScanRun.SelectedLed.Center}" />
+                    <local:CustomImageControl Grid.Row="0" Grid.Column="2"
+                                              DataContext="{Binding DataContext,RelativeSource = {RelativeSource AncestorType=Window}}"
+                                              x:DataType="local:MainWindowViewModel" Source="{Binding LastInputFrame }"
+                                              VerticalAlignment="Stretch"
+                                              HorizontalAlignment="Stretch" Title="Live Image"
+                                              MarkerCenter="{Binding Path=MarkerCenter, ElementName=MergedImage}" />
                     <ListBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
-                             ItemsSource="{Binding SelectedScanRun.SelectedLed.LedImages}">
+                             ItemsSource="{Binding SelectedScanRun.SelectedLed.LedImages}" SelectedItem="{Binding SelectedScanRun.SelectedLed.SelectedImage}">
                         <ListBox.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal"/>
+                                <UniformGrid VerticalAlignment="Stretch" Rows="1"  />
                             </ItemsPanelTemplate>
                         </ListBox.ItemsPanel>
                         <ListBox.ItemTemplate>
                             <DataTemplate x:DataType="IImage">
-                                <Image Source="{Binding}" Margin="0,0,10,0"></Image>
+                                <local:CustomImageControl Source="{Binding}" Margin="0,0,10,0" MinHeight="100"
+                                                          MinWidth="100" HorizontalAlignment="Stretch"
+                                                          VerticalAlignment="Stretch" MarkerCenter="{Binding Path=MarkerCenter, ElementName=MergedImage}">
+                                </local:CustomImageControl>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>

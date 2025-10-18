@@ -2,17 +2,21 @@
 using System.Globalization;
 using System.Linq;
 using Avalonia.Data.Converters;
-using FlashCap;
 
 namespace Scanner;
 
-public class VideoCharacteristicsToStringConverter : IValueConverter
+public class EnumValuesToItemSourceConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is VideoCharacteristics videoCharacteristics)
+        if (value is Type { IsEnum: true } type)
         {
-            return $"{videoCharacteristics.Width}x{videoCharacteristics.Height}";
+            return Enum.GetValues(type);
+        }
+
+        if (value != null && value.GetType().IsEnum)
+        {
+            return Enum.GetValues(value.GetType());
         }
 
         return null;

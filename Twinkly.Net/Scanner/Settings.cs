@@ -1,12 +1,16 @@
 ﻿using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Scanner;
 
 public class Settings
 {
-    public string? SelectedCamera { get; set; }
+    private static JsonSerializerOptions _jsonSerializerOptions =
+        new() { WriteIndented = true, Converters = { new JsonStringEnumConverter() } };
+
+    public string? SelectedCameraName { get; set; }
     public int? SelectedVerticalResolution { get; set; }
     public int? SelectedHorizontalResolution { get; set; }
     public bool TimeAverage { get; set; }
@@ -21,6 +25,7 @@ public class Settings
     public int ScaleDownFactor { get; set; }
     public bool Blur { get; set; }
     public int BlurSize { get; set; } = 3;
+    public bool SubtractBaseImage { get; set; }
 
     public ScanSettings ScanSettings { get; set; } = new();
 
@@ -28,7 +33,7 @@ public class Settings
 
     public void Save()
     {
-        var settings = JsonSerializer.Serialize(this, new JsonSerializerOptions {WriteIndented = true});
+        var settings = JsonSerializer.Serialize(this, _jsonSerializerOptions);
         File.WriteAllText("settings.json", settings);
     }
 
@@ -40,54 +45,47 @@ public class Settings
         }
 
         var settings = File.ReadAllText("settings.json");
-        return JsonSerializer.Deserialize<Settings>(settings) ?? new Settings();
+        return JsonSerializer.Deserialize<Settings>(settings, _jsonSerializerOptions) ?? new Settings();
     }
 
     public static Settings FromViewModel(MainWindowViewModel viewModel)
     {
-        return new Settings
+        var settings = new Settings
         {
-            SelectedCamera = viewModel.SelectedCamera?.Name,
+            SelectedCameraName = viewModel.SelectedCamera?.Name,
             SelectedVerticalResolution = viewModel.SelectedCharacteristic?.Height,
             SelectedHorizontalResolution = viewModel.SelectedCharacteristic?.Width,
-            TimeAverage = viewModel.TimeAverage,
-            TimeAverageSampleSize = viewModel.TimeAverageSampleSize,
-            TrimBottom = viewModel.TrimBottom,
-            TrimImage = viewModel.TrimImage,
-            TrimLeft = viewModel.TrimLeft,
-            TrimRight = viewModel.TrimRight,
-            TrimTop = viewModel.TrimTop,
-            UpperThreshold = viewModel.UpperThreshold,
-            LowerThreshold = viewModel.LowerThreshold,
-            ScaleDownFactor = viewModel.ScaleDownFactor,
-            Blur = viewModel.Blur,
-            BlurSize = viewModel.BlurSize,
-            ChannelSeparationMode = viewModel.ChannelSeparationMode,
             LightControlSettings = LightControlSettings.FromViewModel(viewModel.LightControlViewModel),
             ScanSettings = ScanSettings.FromViewModel(viewModel.ScanViewModel)
         };
+        CopySameNameProperties(viewModel, settings);
+        return settings;
     }
 
     public void SetToViewModel(MainWindowViewModel viewModel)
     {
-        viewModel.SelectedCamera = viewModel.CameraList.FirstOrDefault(c => c.Name == SelectedCamera);
+        viewModel.SelectedCamera = viewModel.CameraList.FirstOrDefault(c => c.Name == SelectedCameraName);
         viewModel.SelectedCharacteristic = viewModel.CharacteristicList.FirstOrDefault(c =>
             c.Height == SelectedVerticalResolution && c.Width == SelectedHorizontalResolution);
-        viewModel.TimeAverage = TimeAverage;
-        viewModel.TimeAverageSampleSize = TimeAverageSampleSize;
-        viewModel.TrimBottom = TrimBottom;
-        viewModel.TrimImage = TrimImage;
-        viewModel.TrimLeft = TrimLeft;
-        viewModel.TrimRight = TrimRight;
-        viewModel.TrimTop = TrimTop;
-        viewModel.LowerThreshold = LowerThreshold;
-        viewModel.UpperThreshold = UpperThreshold;
-        viewModel.ScaleDownFactor = ScaleDownFactor;
-        viewModel.Blur = Blur;
-        viewModel.BlurSize = BlurSize;
-        viewModel.ChannelSeparationMode = ChannelSeparationMode;
+        CopySameNameProperties(this, viewModel);
         LightControlSettings.CopyToViewModel(viewModel.LightControlViewModel);
         ScanSettings.CopyToViewModel(viewModel.ScanViewModel);
+    }
+
+    public static void CopySameNameProperties(object source, object target)
+    {
+        var sourceProperties = source.GetType().GetProperties();
+        var targetProperties = target.GetType().GetProperties();
+        foreach (var sourceProperty in sourceProperties)
+        {
+            var targetProperty = targetProperties.FirstOrDefault(p => p.Name == sourceProperty.Name);
+            if (targetProperty == null)
+            {
+                continue;
+            }
+
+            targetProperty.SetValue(target, sourceProperty.GetValue(source));
+        }
     }
 
     public ChannelSeparationMode ChannelSeparationMode { get; set; }

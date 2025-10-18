@@ -5,5 +5,6 @@ public enum LightControlMode
     BaseColor,
     CustomColor,
     ColorChange,
-    LedScanPattern
+    LedScanPattern,
+    Positions,
 }

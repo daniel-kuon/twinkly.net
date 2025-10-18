@@ -22,13 +22,15 @@ public class ChannelProcessor
 
     public IImage ProcessChanel(byte[,] channelArr)
     {
+        var _ = _timingCapture.CreateWatch("Process Channel");
         _frameCache.Add(channelArr);
 
         if (_viewModel.TimeAverage) channelArr = CalculateAverageFrame();
 
-        if (_viewModel.Blur) BlurChannel(channelArr);
+        if (_viewModel.SubtractBaseImage && BaseFrame != null) SubtractBaseFrame(channelArr);
 
-        if (_viewModel.LowerThreshold > 0 || _viewModel.UpperThreshold < 255) ApplyThreshold(channelArr);
+        if (_viewModel.Blur) channelArr = BlurChannelAndApplyTreshold(channelArr);
+        else if (_viewModel.LowerThreshold > 0 || _viewModel.UpperThreshold < 255) ApplyThreshold(channelArr);
 
         OnFrameProcessed?.Invoke(this, channelArr);
 
@@ -37,7 +39,25 @@ public class ChannelProcessor
         return ConvertToBitmap(channelArr);
     }
 
+    private void SubtractBaseFrame(byte[,] channelArr)
+    {
+        using var _ = _timingCapture.CreateWatch("Subtract Base Frame");
+        int height = channelArr.GetLength(0);
+        int width = channelArr.GetLength(1);
+        var baseFrame = BaseFrame;
+        if (baseFrame == null) return;
+        Parallel.For(0, height, y =>
+        {
+            for (var x = 0; x < width; x++)
+            {
+                channelArr[y, x] = (byte)Math.Max(0, channelArr[y, x] - baseFrame[y, x]);
+            }
+        });
+    }
+
     public byte[,] LastProcessedFrame { get; private set; }
+
+    public byte[,]? BaseFrame { get; set; }
 
     public event EventHandler<byte[,]>? OnFrameProcessed;
 
@@ -64,6 +84,38 @@ public class ChannelProcessor
                 channelArr[y, x] = (byte)(sum / count);
             }
         });
+    }
+
+    private byte[,] BlurChannelAndApplyTreshold(byte[,] channelArr)
+    {
+        using var _ = _timingCapture.CreateWatch("Blur Channel");
+        int height = channelArr.GetLength(0);
+        int width = channelArr.GetLength(1);
+        var target = new byte[height, width];
+        Parallel.For(0, height, y =>
+        {
+            for (var x = 0; x < width; x++)
+            {
+                if (channelArr[y, x] < _viewModel.LowerThreshold || channelArr[y, x] > _viewModel.UpperThreshold)
+                {
+                    continue;
+                }
+
+                var sum = 0;
+                var count = 0;
+                for (var y2 = y - _viewModel.BlurSize; y2 <= y + _viewModel.BlurSize; y2++)
+                for (var x2 = x - _viewModel.BlurSize; x2 <= x + _viewModel.BlurSize; x2++)
+                {
+                    if (y2 < 0 || y2 >= height || x2 < 0 || x2 >= width) continue;
+
+                    sum += channelArr[y2, x2];
+                    count++;
+                }
+
+                target[y, x] = (byte)(sum / count);
+            }
+        });
+        return target;
     }
 
     public void ApplyThreshold(byte[,] channelArr)
@@ -121,7 +173,7 @@ public class ChannelProcessor
         var tcs = new TaskCompletionSource<bool>();
 
         EventHandler<byte[,]>? handler = null;
-        handler = (s, e) =>
+        handler = (_, _) =>
         {
             if (_frameCache.List.Count >= _viewModel.TimeAverageSampleSize)
             {

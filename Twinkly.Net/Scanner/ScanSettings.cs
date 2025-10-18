@@ -7,16 +7,13 @@ public class ScanSettings
 
     public static ScanSettings FromViewModel(ScanViewModel viewModel)
     {
-        return new ScanSettings
-        {
-            ImageMergeMode = viewModel.ImageMergeMode,
-            Threshold = viewModel.Threshold
-        };
+        var settings = new ScanSettings();
+        Settings.CopySameNameProperties(viewModel, settings);
+        return settings;
     }
 
     public void CopyToViewModel(ScanViewModel viewModel)
     {
-        viewModel.ImageMergeMode = this.ImageMergeMode;
-        viewModel.Threshold = this.Threshold;
+        Settings.CopySameNameProperties(this, viewModel);
     }
 }
