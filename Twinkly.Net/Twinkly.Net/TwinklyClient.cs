@@ -20,6 +20,7 @@ public partial class TwinklyClient
     public byte LedByteCount { get; private set; }
     public int LedsCount { get; private set; }
     public int MinTimeBetweenFramesMs { get; set; }
+    public UdpProtocolVersion UdpProtocolVersion { get; private set; }
     private DateTime _lastFrameSent = DateTime.MinValue;
 
 
@@ -36,6 +37,7 @@ public partial class TwinklyClient
             LedByteCount = value.LedProfile == LedProfile.Rgbw ? (byte)4 : (byte)3;
             LedByteMode = value.LedProfile == LedProfile.Rgbw ? LedByteMode.Rgbw : LedByteMode.RgbAww;
             LedsCount = value.NumberOfLed;
+            UdpProtocolVersion = DetermineUdpProtocolVersion(value);
         }
     }
 
@@ -68,8 +70,40 @@ public partial class TwinklyClient
         var client = new TwinklyClient(ipAddress, logger, httpClient);
         await client.Authenticate();
         client.DeviceDetails = await client.ExecuteRequest(new DeviceDetailsRequest());
-        logger.LogInformation("Connected to device {DeviceName} with {LedsCount} LEDs and profile {LedProfile}", client.DeviceDetails.DeviceName, client.DeviceDetails.NumberOfLed, client.DeviceDetails.LedProfile);
+        logger.LogInformation("Connected to device {DeviceName} with {LedsCount} LEDs, profile {LedProfile}, and UDP protocol version {UdpProtocolVersion}", client.DeviceDetails.DeviceName, client.DeviceDetails.NumberOfLed, client.DeviceDetails.LedProfile, client.UdpProtocolVersion);
         return client;
+    }
+
+    private static UdpProtocolVersion DetermineUdpProtocolVersion(IDeviceDetailsResponse deviceDetails)
+    {
+        // Check if it's a DeviceDetailsD which has ProductVersion
+        if (deviceDetails is DeviceDetailsD detailsD)
+        {
+            // Parse the firmware version (format: e.g., "2.4.14", "2.4.6", "1.0.0")
+            var productVersion = detailsD.ProductVersion;
+            if (Version.TryParse(productVersion, out var version))
+            {
+                // Generation II devices from firmware 2.4.14 use version 3
+                if (version >= new Version(2, 4, 14))
+                {
+                    return UdpProtocolVersion.Version3;
+                }
+                // Generation II devices up to firmware 2.4.6 use version 2
+                else if (version >= new Version(2, 0, 0))
+                {
+                    return UdpProtocolVersion.Version2;
+                }
+                // Generation I devices use version 1
+                else
+                {
+                    return UdpProtocolVersion.Version1;
+                }
+            }
+        }
+
+        // For other device detail types (F, G) or if version parsing fails,
+        // default to version 3 as it's the most recent and widely supported
+        return UdpProtocolVersion.Version3;
     }
 
     private async Task Authenticate()
@@ -206,6 +240,7 @@ public partial class TwinklyClient
     /// <summary>
     /// This method sends a frame to the Twinkly device in real-time mode using UDP protocol.
     /// This method is more efficient than using HTTP and allows for higher frame rates.
+    /// The appropriate UDP protocol version (1, 2, or 3) is automatically selected based on the device.
     /// </summary>
     /// <param name="bytes">A jagged array where each element represents the color data for a single LED. Each LED's data should be in the format defined by the device's LED profile (4 bytes per Led for RGBW and 3 bytes per Led for RGB or AWW).</param>
     /// <remarks>This API can send data at a higher rate than the device can process it which will lead to flickering or dropped frames. To make sure that this is no issue set the the <see cref="MinTimeBetweenFramesMs"/> property accordingly. To find this time for your device switch between full on and off leds and check at which framerate issues occur</remarks>
@@ -218,16 +253,10 @@ public partial class TwinklyClient
         byte[] tokenBytes = new byte[8];
         Base64.DecodeFromUtf8(Encoding.UTF8.GetBytes(_authenticationToken!), tokenBytes, out _, out int _);
 
-        byte[] udpHeader = [3, ..tokenBytes, 0, 0];
-
-        byte i = 0;
-
         var rawBytes = bytes.SelectMany(x => x).ToArray();
 
         using var udpClient = new UdpClient();
         udpClient.Connect(_ipAddress.ToString(), 7777);
-
-        var bytesSend = 0;
 
         var msToWait = MinTimeBetweenFramesMs - (DateTime.UtcNow - _lastFrameSent).Milliseconds;
         if (msToWait > 0)
@@ -235,16 +264,76 @@ public partial class TwinklyClient
             await Task.Delay(msToWait);
         }
 
-        while (bytesSend < rawBytes.Length)
+        switch (UdpProtocolVersion)
         {
-            const int udpPayloadLimit = 900;
-            byte[] udpPacket = [..udpHeader, i, ..rawBytes.Skip(i*udpPayloadLimit).Take(udpPayloadLimit)];
-            await udpClient.SendAsync(udpPacket, udpPacket.Length);
-            i++;
-            bytesSend += udpPayloadLimit;
+            case UdpProtocolVersion.Version1:
+                await SendUdpFrameVersion1(udpClient, tokenBytes, rawBytes);
+                break;
+            case UdpProtocolVersion.Version2:
+                await SendUdpFrameVersion2(udpClient, tokenBytes, rawBytes);
+                break;
+            case UdpProtocolVersion.Version3:
+                await SendUdpFrameVersion3(udpClient, tokenBytes, rawBytes);
+                break;
+            default:
+                throw new NotSupportedException($"UDP protocol version {UdpProtocolVersion} is not supported");
         }
 
         _lastFrameSent = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Sends a frame using UDP protocol version 1 (generation I devices).
+    /// Header: 1 byte version (0x01) + 8 bytes token + 1 byte LED count.
+    /// Body: Frame format, no fragmentation.
+    /// </summary>
+    private async Task SendUdpFrameVersion1(UdpClient udpClient, byte[] tokenBytes, byte[] frameData)
+    {
+        // Version 1 header: version byte + 8 token bytes + LED count byte
+        byte[] udpHeader = [0x01, ..tokenBytes, (byte)LedsCount];
+        byte[] udpPacket = [..udpHeader, ..frameData];
+        
+        await udpClient.SendAsync(udpPacket, udpPacket.Length);
+    }
+
+    /// <summary>
+    /// Sends a frame using UDP protocol version 2 (generation II devices, firmware ≤ 2.4.6).
+    /// Header: 1 byte version (0x02) + 8 bytes token + 1 byte 0x00.
+    /// Body: Movie format, no fragmentation.
+    /// </summary>
+    private async Task SendUdpFrameVersion2(UdpClient udpClient, byte[] tokenBytes, byte[] frameData)
+    {
+        // Version 2 header: version byte + 8 token bytes + 0x00 byte
+        byte[] udpHeader = [0x02, ..tokenBytes, 0x00];
+        byte[] udpPacket = [..udpHeader, ..frameData];
+        
+        await udpClient.SendAsync(udpPacket, udpPacket.Length);
+    }
+
+    /// <summary>
+    /// Sends a frame using UDP protocol version 3 (generation II devices, firmware ≥ 2.4.14).
+    /// Header: 1 byte version (0x03) + 8 bytes token + 2 bytes 0x00 + 1 byte fragment number.
+    /// Body: Frames fragmented into UDP datagrams up to 900 bytes.
+    /// </summary>
+    private async Task SendUdpFrameVersion3(UdpClient udpClient, byte[] tokenBytes, byte[] frameData)
+    {
+        // Version 3 uses fragmentation for frames larger than 900 bytes
+        const int udpPayloadLimit = 900;
+        byte fragmentNumber = 0;
+        var bytesSent = 0;
+
+        while (bytesSent < frameData.Length)
+        {
+            // Version 3 header: version byte + 8 token bytes + 2 unknown bytes (0x00) + fragment number
+            byte[] udpHeader = [0x03, ..tokenBytes, 0x00, 0x00, fragmentNumber];
+            byte[] fragment = frameData.Skip(bytesSent).Take(udpPayloadLimit).ToArray();
+            byte[] udpPacket = [..udpHeader, ..fragment];
+            
+            await udpClient.SendAsync(udpPacket, udpPacket.Length);
+            
+            fragmentNumber++;
+            bytesSent += udpPayloadLimit;
+        }
     }
 
     private void ValidateAllLedsByteArray(byte[][] bytes)
