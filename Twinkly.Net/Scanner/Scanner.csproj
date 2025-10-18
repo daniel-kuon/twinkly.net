@@ -24,7 +24,7 @@
         <PackageReference Include="OpenCvSharp4" Version="4.11.0.20250507" />
         <PackageReference Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
         <PackageReference Include="ReactiveUI" Version="22.0.1" />
-        <PackageReference Include="System.Drawing.Common" Version="4.5.0" />
+        <PackageReference Include="System.Drawing.Common" Version="4.7.2" />
     </ItemGroup>
 
 
