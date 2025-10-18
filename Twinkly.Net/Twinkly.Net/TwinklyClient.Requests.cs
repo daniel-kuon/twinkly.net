@@ -139,8 +139,8 @@ public partial class TwinklyClient
     /// Echo endpoint - responds with the requested message.
     /// </summary>
     /// <param name="message">The message to echo back</param>
-    /// <returns>Echo response containing the original message</returns>
-    public Task<EchoResponse> Echo(object message) => ExecuteRequest(new EchoRequest(message));
+    /// <returns>The echoed JSON object</returns>
+    public Task<object> Echo(object message) => ExecuteRequest(new EchoRequest(message)).ContinueWith(r => r.Result.Json);
 
     /// <summary>
     /// Gets information about available LED effects.
@@ -175,14 +175,13 @@ public partial class TwinklyClient
     /// <summary>
     /// Gets firmware version information.
     /// </summary>
-    /// <returns>Firmware version</returns>
-    public Task<FirmwareVersionResponse> GetFirmwareVersion() => ExecuteRequest(new GetFirmwareVersionRequest());
+    /// <returns>Firmware version string</returns>
+    public Task<string> GetFirmwareVersion() => ExecuteRequest(new GetFirmwareVersionRequest()).ContinueWith(r => r.Result.Version);
 
     /// <summary>
     /// Gets device status.
     /// </summary>
-    /// <returns>Device status information</returns>
-    public Task<StatusResponse> GetStatus() => ExecuteRequest(new GetStatusRequest());
+    public Task GetStatus() => ExecuteRequest(new GetStatusRequest());
 
     /// <summary>
     /// Gets saturation settings.
@@ -303,20 +302,17 @@ public partial class TwinklyClient
     /// <summary>
     /// Gets microphone configuration.
     /// </summary>
-    /// <returns>Microphone configuration</returns>
-    public Task<MicConfigResponse> GetMicConfig() => ExecuteRequest(new GetMicConfigRequest());
+    public Task GetMicConfig() => ExecuteRequest(new GetMicConfigRequest());
 
     /// <summary>
     /// Gets microphone sample.
     /// </summary>
-    /// <returns>Microphone sample data</returns>
-    public Task<MicSampleResponse> GetMicSample() => ExecuteRequest(new GetMicSampleRequest());
+    public Task GetMicSample() => ExecuteRequest(new GetMicSampleRequest());
 
     /// <summary>
     /// Gets device summary information.
     /// </summary>
-    /// <returns>Device summary</returns>
-    public Task<SummaryResponse> GetSummary() => ExecuteRequest(new GetSummaryRequest());
+    public Task GetSummary() => ExecuteRequest(new GetSummaryRequest());
 
 }
 

@@ -93,28 +93,24 @@ Gets the current device name.
 
 **Returns:** Device name
 
-#### `Task<FirmwareVersionResponse> GetFirmwareVersion()`
+#### `Task<string> GetFirmwareVersion()`
 Gets firmware version information.
 
-**Returns:** Firmware version details
+**Returns:** Firmware version string
 
-#### `Task<StatusResponse> GetStatus()`
+#### `Task GetStatus()`
 Gets device status.
 
-**Returns:** Device status information
-
-#### `Task<SummaryResponse> GetSummary()`
+#### `Task GetSummary()`
 Gets device summary information.
 
-**Returns:** Device summary
-
-#### `Task<EchoResponse> Echo(object message)`
+#### `Task<object> Echo(object message)`
 Echo endpoint - responds with the requested message. Useful for testing connectivity.
 
 **Parameters:**
 - `message` - The message to echo back
 
-**Returns:** Echo response containing the original message
+**Returns:** The echoed JSON object
 
 ### LED Control
 
@@ -416,15 +412,11 @@ Gets MQTT configuration.
 - `User` - MQTT username
 - `KeepAliveInterval` - Keep alive interval
 
-#### `Task<MicConfigResponse> GetMicConfig()`
+#### `Task GetMicConfig()`
 Gets microphone configuration.
 
-**Returns:** Microphone configuration
-
-#### `Task<MicSampleResponse> GetMicSample()`
+#### `Task GetMicSample()`
 Gets microphone sample.
-
-**Returns:** Microphone sample data
 
 ### Real-Time Control
 
