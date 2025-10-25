@@ -138,9 +138,10 @@ public partial class TwinklyClient
     /// <summary>
     /// Echo endpoint - responds with the requested message.
     /// </summary>
+    /// <typeparam name="T">The type of message to echo</typeparam>
     /// <param name="message">The message to echo back</param>
-    /// <returns>The echoed JSON object</returns>
-    public Task<object> Echo(object message) => ExecuteRequest(new EchoRequest(message)).ContinueWith(r => r.Result.Json);
+    /// <returns>The echoed message of the same type</returns>
+    public Task<T> Echo<T>(T message) => ExecuteRequest(new EchoRequest<T>(message)).ContinueWith(r => r.Result.Json);
 
     /// <summary>
     /// Gets information about available LED effects.

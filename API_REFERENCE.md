@@ -104,13 +104,26 @@ Gets device status.
 #### `Task GetSummary()`
 Gets device summary information.
 
-#### `Task<object> Echo(object message)`
+#### `Task<T> Echo<T>(T message)`
 Echo endpoint - responds with the requested message. Useful for testing connectivity.
+
+**Type Parameters:**
+- `T` - The type of message to echo
 
 **Parameters:**
 - `message` - The message to echo back
 
-**Returns:** The echoed JSON object
+**Returns:** The echoed message of the same type as the input
+
+**Example:**
+```csharp
+// Echo a string
+var echoedString = await client.Echo("Hello!");
+
+// Echo a complex object
+var testObj = new { message = "test", value = 42 };
+var echoedObj = await client.Echo(testObj);
+```
 
 ### LED Control
 

@@ -184,8 +184,9 @@ public record SetTimerRequest(int TimeNow, int TimeOn, int TimeOff) : Request<IC
 /// <summary>
 /// Echo endpoint - responds with requested message.
 /// </summary>
+/// <typeparam name="T">The type of message to echo</typeparam>
 /// <param name="Message">The message to echo back</param>
-public record EchoRequest(object Message) : Request<EchoResponse>(HttpMethod.Post, "echo");
+public record EchoRequest<T>(T Message) : Request<EchoResponse<T>>(HttpMethod.Post, "echo");
 
 /// <summary>
 /// Gets information about LED effects.

@@ -71,11 +71,12 @@ public record TimerResponse(
 /// <summary>
 /// Response from echo endpoint.
 /// </summary>
+/// <typeparam name="T">The type of echoed message</typeparam>
 /// <param name="Code">Response code</param>
 /// <param name="Json">The echoed JSON object</param>
-public record EchoResponse(
+public record EchoResponse<T>(
     ResponseCode Code,
-    object Json
+    T Json
 ) : ICodeResponse;
 
 /// <summary>
