@@ -13,16 +13,42 @@ using Twinkly.Net.DTOs.Responses;
 
 namespace Twinkly.Net;
 
+/// <summary>
+/// Client for interacting with Twinkly LED devices via their REST API.
+/// </summary>
 public partial class TwinklyClient
 {
+    /// <summary>
+    /// Gets the LED profile of the device (RGB, RGBW, or AWW).
+    /// </summary>
     public LedProfile LedProfile { get; private set; }
+    
+    /// <summary>
+    /// Gets the LED byte mode (3 bytes for RGB/AWW, 4 bytes for RGBW).
+    /// </summary>
     public LedByteMode LedByteMode { get; private set; }
+    
+    /// <summary>
+    /// Gets the number of bytes per LED.
+    /// </summary>
     public byte LedByteCount { get; private set; }
+    
+    /// <summary>
+    /// Gets the total number of LEDs in the device.
+    /// </summary>
     public int LedsCount { get; private set; }
+    
+    /// <summary>
+    /// Gets or sets the minimum time between frames in milliseconds for UDP frame sending.
+    /// Set this to avoid flickering or dropped frames.
+    /// </summary>
     public int MinTimeBetweenFramesMs { get; set; }
     private DateTime _lastFrameSent = DateTime.MinValue;
 
 
+    /// <summary>
+    /// Gets the detailed device information retrieved during client creation.
+    /// </summary>
     public IDeviceDetailsResponse DeviceDetails
     {
         get =>
@@ -63,6 +89,14 @@ public partial class TwinklyClient
         _httpClient = httpClient;
     }
 
+    /// <summary>
+    /// Creates and initializes a new TwinklyClient instance.
+    /// Automatically authenticates and retrieves device details.
+    /// </summary>
+    /// <param name="ipAddress">IP address of the Twinkly device</param>
+    /// <param name="logger">Logger instance for logging operations</param>
+    /// <param name="httpClient">HTTP client for making requests</param>
+    /// <returns>Initialized TwinklyClient</returns>
     public static async Task<TwinklyClient> Create(IPAddress ipAddress, ILogger<TwinklyClient> logger, HttpClient httpClient)
     {
         var client = new TwinklyClient(ipAddress, logger, httpClient);
@@ -86,6 +120,10 @@ public partial class TwinklyClient
         await ExecuteRequest(new VerifyRequest(loginResponse.ChallengeResponse));
     }
 
+    /// <summary>
+    /// Sets the LED operation mode.
+    /// </summary>
+    /// <param name="mode">The operation mode to set (Off, Color, Demo, Effect, Movie, Playlist, Rt)</param>
     public async Task SetLedMode(OperationMode mode)
     {
         if (_ledMode == mode)
@@ -263,8 +301,18 @@ public partial class TwinklyClient
     }
 }
 
+/// <summary>
+/// Represents the number of bytes per LED based on the device profile.
+/// </summary>
 public enum LedByteMode
 {
+    /// <summary>
+    /// 3 bytes per LED (RGB or AWW profiles)
+    /// </summary>
     RgbAww = 3,
+    
+    /// <summary>
+    /// 4 bytes per LED (RGBW profile)
+    /// </summary>
     Rgbw = 4
 }
